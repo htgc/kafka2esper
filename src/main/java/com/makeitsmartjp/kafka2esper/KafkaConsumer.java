@@ -23,14 +23,14 @@ class EsperSubmitter implements Runnable {
 	private KafkaStream<byte[], byte[]> stream;
 	private int threadNumber;
 	private ObjectMapper objectMapper;
-	
+
 	public EsperSubmitter(KafkaStream<byte[], byte[]> stream, int threadNumber, EPServiceProvider epService) {
 		this.stream = stream;
 		this.threadNumber = threadNumber;
 		objectMapper = new ObjectMapper();
 		this.epService = epService;
 	}
-	
+
 	@Override
 	public void run() {
 		ConsumerIterator<byte[], byte[]> it = stream.iterator();
@@ -49,11 +49,9 @@ class EsperSubmitter implements Runnable {
 			} else {
 				log.log(Level.FINE, "Event is null");
 			}
-
 		}
 		log.log(Level.FINE, "Shutting down Thread: " + threadNumber);
 	}
-	
 }
 
 @Log
@@ -68,7 +66,7 @@ public class KafkaConsumer {
 		this.topic = topic;
 		this.epService = epService;
 	}
-	
+
 	public void shutdown() {
 		if (consumer != null) {
 			consumer.shutdown();
@@ -76,7 +74,7 @@ public class KafkaConsumer {
 		if (executor != null) {
 			executor.shutdown();
 		}
-		
+
 		try {
 			if (!executor.awaitTermination(5000, TimeUnit.MILLISECONDS)) {
 				log.log(Level.WARNING, "Timed out waiting for consumer threads to shutdown, exiting uncleanly.");
@@ -85,13 +83,13 @@ public class KafkaConsumer {
 			log.log(Level.WARNING, "Interrupted during shutdown, exiting uncleanly.");
 		}
 	}
-	
+
 	public void run(int numThreads) {
 		Map<String, Integer> topicCountMap = new HashMap<String, Integer>();
 		topicCountMap.put(topic, new Integer(numThreads));
 		Map<String, List<KafkaStream<byte[], byte[]>>> consumerMap = consumer.createMessageStreams(topicCountMap);
 		List<KafkaStream<byte[], byte[]>> streams = consumerMap.get(topic);
-		
+
 		// Launch all threads
 		executor = Executors.newFixedThreadPool(numThreads);
 		int threadNumber = 0;
